@@ -73,7 +73,7 @@ export class JupyterController implements vscode.Disposable {
 		});
 
 		this.apiWrapper.registerCommand(constants.jupyterReinstallDependenciesCommand, () => { return this.handleDependenciesReinstallation(); });
-		this.apiWrapper.registerCommand(constants.jupyterInstallPackages, () => { return this.doManagePackages(); });
+		this.apiWrapper.registerCommand(constants.jupyterManagePackages, () => { return this.doManagePackages(); });
 		this.apiWrapper.registerCommand(constants.jupyterConfigurePython, () => { return this.doConfigurePython(this._jupyterInstallation); });
 
 		let supportedFileFilter: vscode.DocumentFilter[] = [
