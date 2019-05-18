@@ -24,6 +24,7 @@ import { NotebookCompletionItemProvider } from '../intellisense/completionItemPr
 import { JupyterNotebookProvider } from './jupyterNotebookProvider';
 import { ConfigurePythonDialog } from '../dialog/configurePythonDialog';
 import CodeAdapter from '../prompts/adapter';
+import { ManagePackagesDialog } from '../dialog/managePackagesDialog';
 
 let untitledCounter = 0;
 
@@ -194,10 +195,8 @@ export class JupyterController implements vscode.Disposable {
 
 	public doManagePackages(): void {
 		try {
-			let terminal = this.apiWrapper.createTerminalWithOptions({ cwd: this.getPythonBinDir() });
-			terminal.show(true);
-			let shellType = this.apiWrapper.getConfiguration().get('terminal.integrated.shell.windows');
-			terminal.sendText(this.getTextToSendToTerminal(shellType), true);
+			let packagesDialog = new ManagePackagesDialog(this.apiWrapper, this._jupyterInstallation);
+			packagesDialog.showDialog();
 		} catch (error) {
 			let message = utils.getErrorMessage(error);
 			this.apiWrapper.showErrorMessage(message);
@@ -223,10 +222,6 @@ export class JupyterController implements vscode.Disposable {
 		} else {
 			return localizedConstants.msgManagePackagesBash;
 		}
-	}
-
-	private getPythonBinDir(): string {
-		return JupyterServerInstallation.getPythonBinPath(this.apiWrapper);
 	}
 
 	public get jupyterInstallation() {

@@ -18,6 +18,7 @@ export class ManagePackagesDialog {
 	private readonly CancelButtonText = localize('managePackages.cancelButtonText', "Close");
 
 	constructor(private apiWrapper: ApiWrapper, private jupyterInstallation: JupyterServerInstallation) {
+		this.apiWrapper.showInfoMessage(`Using python path: ${this.jupyterInstallation.pythonExecutable}`);
 	}
 
 	/**
@@ -30,7 +31,7 @@ export class ManagePackagesDialog {
 
 		this.initializeContent();
 
-		this.dialog.okButton.label = '';
+		this.dialog.okButton.hidden = true;
 		this.dialog.cancelButton.label = this.CancelButtonText;
 
 		azdata.window.openDialog(this.dialog);
@@ -48,10 +49,12 @@ export class ManagePackagesDialog {
 		});
 	}
 
+	/*
 	private showErrorMessage(message: string): void {
 		this.dialog.message = {
 			text: message,
 			level: azdata.window.MessageLevel.Error
 		};
 	}
+	*/
 }
