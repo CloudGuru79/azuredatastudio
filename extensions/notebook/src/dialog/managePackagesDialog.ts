@@ -6,7 +6,7 @@
 import * as nls from 'vscode-nls';
 import * as azdata from 'azdata';
 
-import JupyterServerInstallation from '../jupyter/jupyterServerInstallation';
+import JupyterServerInstallation, { PythonPkgDetails } from '../jupyter/jupyterServerInstallation';
 
 const localize = nls.loadMessageBundle();
 
@@ -37,9 +37,12 @@ export class ManagePackagesDialog {
 
 	private initializeContent(): void {
 		this.dialog.registerContent(async view => {
+			let pythonPackages = await this.jupyterInstallation.getInstalledPackages();
 
 			let packageCountLabel = view.modelBuilder.text().withProperties({
-				value: localize('managePackages.packageCountLabel', "{0} packages found in '{1}'", 0, this.jupyterInstallation.pythonBinPath)
+				value: localize('managePackages.packageCountLabel', "{0} packages found in '{1}'",
+					pythonPackages.length,
+					this.jupyterInstallation.pythonBinPath)
 			}).component();
 
 			let packagesTable = view.modelBuilder.table()
@@ -49,10 +52,7 @@ export class ManagePackagesDialog {
 						localize('managePackages.pkgInstallDataColumn', "Installed On"),
 						localize('managePackages.pkgVersionColumn', "Version")
 					],
-					data: [
-						['Test', '00/00/00', '0.0.0'],
-						['Test', '00/00/00', '0.0.0']
-					],
+					data: this.getDataForPackages(pythonPackages),
 					height: '600px',
 					width: '400px'
 				}).component();
@@ -68,6 +68,10 @@ export class ManagePackagesDialog {
 
 			await view.initializeModel(formModel);
 		});
+	}
+
+	private getDataForPackages(packages: PythonPkgDetails[]): string[][] {
+		return packages.map(pkg => [pkg.packageName, pkg.installDate, pkg.version]);
 	}
 
 	/*

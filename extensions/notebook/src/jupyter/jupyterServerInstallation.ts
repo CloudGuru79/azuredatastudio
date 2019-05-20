@@ -341,6 +341,18 @@ export default class JupyterServerInstallation {
 		}
 	}
 
+	public async getInstalledPackages(): Promise<PythonPkgDetails[]> {
+		return Promise.resolve<PythonPkgDetails[]>([{
+			packageName: 'TestPkg1',
+			installDate: '00/00/00',
+			version: '0.0.0'
+		}, {
+			packageName: 'TestPkg2',
+			installDate: '00/00/00',
+			version: '0.0.0'
+		}]);
+	}
+
 	private async installOfflinePipPackages(): Promise<void> {
 		let installJupyterCommand: string;
 		if (process.platform === constants.winPlatform) {
@@ -500,4 +512,10 @@ export default class JupyterServerInstallation {
 			useExistingInstall ? '' : constants.pythonBundleVersion,
 			process.platform === constants.winPlatform ? 'python.exe' : 'bin/python3');
 	}
+}
+
+export interface PythonPkgDetails {
+	packageName: string;
+	installDate: string;
+	version: string;
 }
