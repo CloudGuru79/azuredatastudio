@@ -7,7 +7,6 @@ import * as nls from 'vscode-nls';
 import * as azdata from 'azdata';
 
 import JupyterServerInstallation from '../jupyter/jupyterServerInstallation';
-import { ApiWrapper } from '../common/apiWrapper';
 
 const localize = nls.loadMessageBundle();
 
@@ -17,8 +16,7 @@ export class ManagePackagesDialog {
 	private readonly DialogTitle = localize('managePackages.dialogName', "Manage Packages");
 	private readonly CancelButtonText = localize('managePackages.cancelButtonText', "Close");
 
-	constructor(private apiWrapper: ApiWrapper, private jupyterInstallation: JupyterServerInstallation) {
-		this.apiWrapper.showInfoMessage(`Using python path: ${this.jupyterInstallation.pythonExecutable}`);
+	constructor(private jupyterInstallation: JupyterServerInstallation) {
 	}
 
 	/**
@@ -40,10 +38,33 @@ export class ManagePackagesDialog {
 	private initializeContent(): void {
 		this.dialog.registerContent(async view => {
 
-			let formModel = view.modelBuilder.formContainer()
-				.withFormItems([
+			let packageCountLabel = view.modelBuilder.text().withProperties({
+				value: localize('managePackages.packageCountLabel', "{0} packages found in '{1}'", 0, this.jupyterInstallation.pythonBinPath)
+			}).component();
 
-				]).component();
+			let packagesTable = view.modelBuilder.table()
+				.withProperties({
+					columns: [
+						localize('managePackages.pkgNameColumn', "Name"),
+						localize('managePackages.pkgInstallDataColumn', "Installed On"),
+						localize('managePackages.pkgVersionColumn', "Version")
+					],
+					data: [
+						['Test', '00/00/00', '0.0.0'],
+						['Test', '00/00/00', '0.0.0']
+					],
+					height: '600px',
+					width: '400px'
+				}).component();
+
+			let formModel = view.modelBuilder.formContainer()
+				.withFormItems([{
+					component: packageCountLabel,
+					title: ''
+				}, {
+					component: packagesTable,
+					title: ''
+				}]).component();
 
 			await view.initializeModel(formModel);
 		});
