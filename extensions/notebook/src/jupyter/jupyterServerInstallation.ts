@@ -10,6 +10,7 @@ import * as azdata from 'azdata';
 import { ExecOptions } from 'child_process';
 import * as decompress from 'decompress';
 import * as request from 'request';
+import { EOL } from 'os';
 
 import { ApiWrapper } from '../common/apiWrapper';
 import * as constants from '../common/constants';
@@ -363,7 +364,7 @@ export default class JupyterServerInstallation {
 		if (installJupyterCommand) {
 			this.outputChannel.show(true);
 			this.outputChannel.appendLine(localize('msgInstallStart', "Installing required packages to run Notebooks..."));
-			await this.executeCommand(installJupyterCommand);
+			await this.executeStreamedCommand(installJupyterCommand);
 			this.outputChannel.appendLine(localize('msgJupyterInstallDone', "... Jupyter installation complete."));
 		} else {
 			return Promise.resolve();
@@ -384,7 +385,7 @@ export default class JupyterServerInstallation {
 		if (installSparkMagic) {
 			this.outputChannel.show(true);
 			this.outputChannel.appendLine(localize('msgInstallingSpark', "Installing SparkMagic..."));
-			await this.executeCommand(installSparkMagic);
+			await this.executeStreamedCommand(installSparkMagic);
 		}
 	}
 
@@ -393,10 +394,10 @@ export default class JupyterServerInstallation {
 		this.outputChannel.appendLine(localize('msgInstallStart', "Installing required packages to run Notebooks..."));
 
 		let installCommand = `"${this._pythonExecutable}" -m pip install jupyter==1.0.0 pandas==0.24.2`;
-		await this.executeCommand(installCommand);
+		await this.executeStreamedCommand(installCommand);
 
 		installCommand = `"${this._pythonExecutable}" -m pip install prose-codeaccelerator==1.3.0 --extra-index-url https://prose-python-packages.azurewebsites.net`;
-		await this.executeCommand(installCommand);
+		await this.executeStreamedCommand(installCommand);
 
 		this.outputChannel.appendLine(localize('msgJupyterInstallDone', "... Jupyter installation complete."));
 	}
@@ -409,16 +410,20 @@ export default class JupyterServerInstallation {
 		if (process.platform !== constants.winPlatform) {
 			installCommand = `${installCommand} pykerberos==1.2.1`;
 		}
-		await this.executeCommand(installCommand);
+		await this.executeStreamedCommand(installCommand);
 
 		installCommand = `"${this._pythonExecutable}" -m pip install prose-codeaccelerator==1.3.0 --extra-index-url https://prose-python-packages.azurewebsites.net`;
-		await this.executeCommand(installCommand);
+		await this.executeStreamedCommand(installCommand);
 
 		this.outputChannel.appendLine(localize('msgJupyterInstallDone', "... Jupyter installation complete."));
 	}
 
-	private async executeCommand(command: string): Promise<void> {
+	private async executeStreamedCommand(command: string): Promise<void> {
 		await utils.executeStreamedCommand(command, { env: this.execOptions.env }, this.outputChannel);
+	}
+
+	private async executeBufferedCommand(command: string): Promise<string> {
+		return await utils.executeBufferedCommand(command, { env: this.execOptions.env });
 	}
 
 	public get pythonExecutable(): string {
@@ -504,6 +509,29 @@ export default class JupyterServerInstallation {
 			JupyterServerInstallation.getPythonInstallPath(apiWrapper),
 			useExistingInstall ? '' : constants.pythonBundleVersion,
 			pythonBinPathSuffix);
+	}
+
+	/**
+	 * Returns the folder containing the python pip packages.
+	 * @param apiWrapper An ApiWrapper to use when retrieving user settings info.
+	 */
+	public async getPythonPackagesPath(): Promise<string> {
+		let cmd = `"${this.pythonExecutable}" -m pip show jupyter`;
+		let packageInfo = await this.executeBufferedCommand(cmd);
+
+		let location = undefined;
+		if (packageInfo) {
+			let locationHeader = 'Location: ';
+			let parts = packageInfo.split(EOL);
+			for (let part of parts) {
+				if (part && part.startsWith(locationHeader)) {
+					location = part.substring(locationHeader.length);
+					break;
+				}
+			}
+		}
+
+		return location;
 	}
 
 	public static getPythonExePath(pythonInstallPath: string, useExistingInstall: boolean): string {

@@ -38,11 +38,12 @@ export class ManagePackagesDialog {
 	private initializeContent(): void {
 		this.dialog.registerContent(async view => {
 			let pythonPackages = await this.jupyterInstallation.getInstalledPackages();
+			let packagesLocation = await this.jupyterInstallation.getPythonPackagesPath();
 
 			let packageCountLabel = view.modelBuilder.text().withProperties({
 				value: localize('managePackages.packageCountLabel', "{0} packages found in '{1}'",
 					pythonPackages.length,
-					this.jupyterInstallation.pythonBinPath)
+					packagesLocation)
 			}).component();
 
 			let packagesTable = view.modelBuilder.table()
