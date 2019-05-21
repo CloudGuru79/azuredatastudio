@@ -37,7 +37,7 @@ export class ManagePackagesDialog {
 
 	private initializeContent(): void {
 		this.dialog.registerContent(async view => {
-			let pythonPackages = await this.jupyterInstallation.getInstalledPackages();
+			let pythonPackages = await this.jupyterInstallation.getInstalledPipPackages();
 			let packagesLocation = await this.jupyterInstallation.getPythonPackagesPath();
 
 			let packageCountLabel = view.modelBuilder.text().withProperties({
@@ -50,11 +50,10 @@ export class ManagePackagesDialog {
 				.withProperties({
 					columns: [
 						localize('managePackages.pkgNameColumn', "Name"),
-						localize('managePackages.pkgInstallDataColumn', "Installed On"),
 						localize('managePackages.pkgVersionColumn', "Version")
 					],
 					data: this.getDataForPackages(pythonPackages),
-					height: '600px',
+					height: '700px',
 					width: '400px'
 				}).component();
 
@@ -72,7 +71,7 @@ export class ManagePackagesDialog {
 	}
 
 	private getDataForPackages(packages: PythonPkgDetails[]): string[][] {
-		return packages.map(pkg => [pkg.packageName, pkg.installDate, pkg.version]);
+		return packages.map(pkg => [pkg.name, pkg.version]);
 	}
 
 	/*

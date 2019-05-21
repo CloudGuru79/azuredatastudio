@@ -342,16 +342,15 @@ export default class JupyterServerInstallation {
 		}
 	}
 
-	public async getInstalledPackages(): Promise<PythonPkgDetails[]> {
-		return Promise.resolve<PythonPkgDetails[]>([{
-			packageName: 'TestPkg1',
-			installDate: '00/00/00',
-			version: '0.0.0'
-		}, {
-			packageName: 'TestPkg2',
-			installDate: '00/00/00',
-			version: '0.0.0'
-		}]);
+	public async getInstalledPipPackages(): Promise<PythonPkgDetails[]> {
+		let cmd = `"${this.pythonExecutable}" -m pip list --format=json`;
+		let packagesInfo = await this.executeBufferedCommand(cmd);
+
+		let packagesResult: PythonPkgDetails[] = [];
+		if (packagesInfo) {
+			packagesResult = <PythonPkgDetails[]>JSON.parse(packagesInfo);
+		}
+		return packagesResult;
 	}
 
 	private async installOfflinePipPackages(): Promise<void> {
@@ -543,7 +542,6 @@ export default class JupyterServerInstallation {
 }
 
 export interface PythonPkgDetails {
-	packageName: string;
-	installDate: string;
+	name: string;
 	version: string;
 }
