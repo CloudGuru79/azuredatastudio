@@ -16,10 +16,15 @@ export class ManagePackagesDialog {
 
 	private packageCountLabel: azdata.TextComponent;
 	private packagesTable: azdata.TableComponent;
-	private pageLoader: azdata.LoadingComponent;
+	private installedTabLoader: azdata.LoadingComponent;
+
+	private installedTab: azdata.window.DialogTab;
+	private addNewTab: azdata.window.DialogTab;
 
 	private readonly DialogTitle = localize('managePackages.dialogName', "Manage Packages");
 	private readonly CancelButtonText = localize('managePackages.cancelButtonText', "Close");
+	private readonly InstalledTabTitle = localize('managePackages.installedTabTitle', "Installed");
+	private readonly AddNewTabTitle = localize('managePackages.addNewTabTitle', "Add new");
 
 	constructor(private jupyterInstallation: JupyterServerInstallation) {
 	}
@@ -31,17 +36,22 @@ export class ManagePackagesDialog {
 	 */
 	public showDialog(): void {
 		this.dialog = azdata.window.createModelViewDialog(this.DialogTitle);
+		this.installedTab = azdata.window.createTab(this.InstalledTabTitle);
+		this.addNewTab = azdata.window.createTab(this.AddNewTabTitle);
 
-		this.initializeContent();
+		this.initializeInstalledTab();
+		this.initializeAddNewTab();
 
 		this.dialog.okButton.hidden = true;
 		this.dialog.cancelButton.label = this.CancelButtonText;
 
+		this.dialog.content = [this.installedTab, this.addNewTab];
+
 		azdata.window.openDialog(this.dialog);
 	}
 
-	private initializeContent(): void {
-		this.dialog.registerContent(async view => {
+	private initializeInstalledTab(): void {
+		this.installedTab.registerContent(async view => {
 			this.packageCountLabel = view.modelBuilder.text().withProperties({
 				value: ''
 			}).component();
@@ -57,8 +67,6 @@ export class ManagePackagesDialog {
 					width: '400px'
 				}).component();
 
-
-
 			let formModel = view.modelBuilder.formContainer()
 				.withFormItems([{
 					component: this.packageCountLabel,
@@ -68,19 +76,19 @@ export class ManagePackagesDialog {
 					title: ''
 				}]).component();
 
-			this.pageLoader = view.modelBuilder.loadingComponent()
+			this.installedTabLoader = view.modelBuilder.loadingComponent()
 				.withItem(formModel)
 				.withProperties({
 					loading: true
 				}).component();
 
-			await view.initializeModel(this.pageLoader);
+			await view.initializeModel(this.installedTabLoader);
 
-			await this.loadPageData();
+			await this.loadInstalledTabData();
 		});
 	}
 
-	private async loadPageData(): Promise<void> {
+	private async loadInstalledTabData(): Promise<void> {
 		try {
 			let pythonPackages = await this.jupyterInstallation.getInstalledPipPackages();
 			let packagesLocation = await this.jupyterInstallation.getPythonPackagesPath();
@@ -98,11 +106,27 @@ export class ManagePackagesDialog {
 			this.showErrorMessage(utils.getErrorMessage(err));
 		}
 
-		await this.pageLoader.updateProperties({ loading: false });
+		await this.installedTabLoader.updateProperties({ loading: false });
 	}
 
 	private getDataForPackages(packages: PythonPkgDetails[]): string[][] {
 		return packages.map(pkg => [pkg.name, pkg.version]);
+	}
+
+	private initializeAddNewTab(): void {
+		this.addNewTab.registerContent(async view => {
+			let formModel = view.modelBuilder.formContainer()
+				.withFormItems([
+
+				]).component();
+
+			await view.initializeModel(formModel);
+
+			await this.loadAddNewTabData();
+		});
+	}
+
+	private async loadAddNewTabData(): Promise<void> {
 	}
 
 	private showErrorMessage(message: string): void {
